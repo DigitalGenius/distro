@@ -11,7 +11,7 @@ git clone https://github.com/torch/distro.git ~/torch --recursive
 Install all the dependencies, executing the 'install-deps.sh' file.
 Uses `apt-get` on Ubuntu, which might require `sudo`. Uses `brew` on OSX.
 ```sh
-git clone https://github.com/torch/distro.git ~/torch --recursive
+cd distro; ./install-deps.sh
 ```
 
 Install torch distribution, together with a lot of nice goodies.
