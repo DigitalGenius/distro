@@ -5,7 +5,7 @@ Self-contained Torch installation
 
 Clone this repo...
 ```sh
-git clone https://github.com/torch/distro.git ~/torch --recursive
+git clone https://github.com/DigitalGenius/distro.git ~/torch --recursive
 ```
 
 Install all the dependencies, executing the 'install-deps.sh' file.
