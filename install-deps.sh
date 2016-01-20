@@ -5,6 +5,46 @@
 ######################################################################
 {
 
+
+install_cuda(){
+    cd /tmp/
+
+    # get the CUDA installer
+    echo "Downloading CUDA .deb installer"
+    wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/cuda-repo-ubuntu1404_7.5-18_amd64.deb
+    sudo dpkg -i cuda-repo-ubuntu1404_7.5-18_amd64.deb
+
+    # update
+    echo "Updating and upgrading apt"
+    sudo apt-get update
+    sudo apt-get upgrade -y
+    sudo apt-get install -y opencl-headers build-essential protobuf-compiler \
+        libprotoc-dev libboost-all-dev libleveldb-dev hdf5-tools libhdf5-serial-dev \
+        libopencv-core-dev  libopencv-highgui-dev libsnappy-dev libsnappy1 \
+        libatlas-base-dev cmake libstdc++6-4.8-dbg libgoogle-glog0 libgoogle-glog-dev \
+        libgflags-dev liblmdb-dev git python-pip gfortran
+
+    # clean after updating and installing 
+    sudo apt-get clean
+
+    # update kernel
+    echo "updating Linux kernel"
+    sudo apt-get install -y linux-image-extra-`uname -r` linux-headers-`uname -r` linux-image-`uname -r`
+
+    # reinstall cuda and clean
+    echo "Installing cuda drivers"
+    sudo apt-get install -y cuda
+    sudo apt-get clean
+
+    # try to launch nvidia manager
+    nvidia-smi
+
+    cd
+}
+
+
+
+
 install_openblas() {
     # Get and build OpenBlas (Torch is much better with a decent Blas)
     cd /tmp/
@@ -161,6 +201,7 @@ elif [[ "$(uname)" == 'Linux' ]]; then
         sudo apt-get install -y "${target_pkgs[@]}"
 
         install_openblas
+        install_cuda
 
     elif [[ $distribution == 'elementary' ]]; then
         declare -a target_pkgs
