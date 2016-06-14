@@ -17,7 +17,7 @@ install_cuda(){
     # update
     echo "Updating and upgrading apt"
     sudo apt-get update
-    sudo apt-get upgrade -y
+    # sudo apt-get upgrade -y
     sudo apt-get install -y opencl-headers build-essential protobuf-compiler \
         libprotoc-dev libboost-all-dev libleveldb-dev hdf5-tools libhdf5-serial-dev \
         libopencv-core-dev  libopencv-highgui-dev libsnappy-dev libsnappy1 \
