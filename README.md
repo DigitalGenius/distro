@@ -38,9 +38,9 @@ Note: If you use a non-standard shell, you'll want to run this command
 
 ### Updating the distro repo
 To update pulling from the latest submodules:
-'''bash
+```bash
 git submodule foreach git pull origin master
-'''
+```
 
 In case there are some conflicts, if we don't want to manually inspect and accept the remote, 
 we can for the specific submodule:
