@@ -36,4 +36,22 @@ Note: If you use a non-standard shell, you'll want to run this command
 ./install/bin/torch-activate
 ```
 
+### Updating the distro repo
+To update pulling from the latest submodules:
+'''bash
+git submodule foreach git pull origin master
+'''
+
+In case there are some conflicts, if we don't want to manually inspect and accept the remote, 
+we can for the specific submodule:
+```bash
+git fetch --all
+git reset --hard origin/master
+```
+Or if it's a different brunch from master:
+```bash
+git reset --hard origin/your_branch
+```
+
+
 Tested on Ubuntu 14.04, CentOS/RHEL 6.3 and OSX
