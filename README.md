@@ -31,21 +31,27 @@ Note: If you use a non-standard shell, you'll want to run this command
 ```
 
 ### Updating the distro repo
-To update pulling from the latest submodules:
 ```bash
-git submodule foreach git pull origin master
+./update.sh
 ```
 
-In case there are some conflicts, if we don't want to manually inspect and accept the remote, 
-we can for the specific submodule:
-```bash
-git fetch --all
-git reset --hard origin/master
-```
-Or if it's a different brunch from master:
-```bash
-git reset --hard origin/your_branch
-```
-
+In case we want to sync with the upstream repo:
+* Configure an upstream:
+  * Check if there is any upstream branch
+  ```bash
+  git remote -v
+  ```
+  If there's not:
+  ```bash
+  git remote add upstream https://github.com/torch/distro
+  git remote -v
+  ```
+  
+  * Sync with the upstream: 
+  ```bash
+  git fetch upstream
+  git checkout master
+  git merge upstream/master
+  ```
 
 Tested on Ubuntu 14.04, CentOS/RHEL 6.3 and OSX
