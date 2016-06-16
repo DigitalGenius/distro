@@ -41,11 +41,11 @@ In case we want to sync with the upstream repo:
   ```bash
   git remote -v
   ```
-  If there's not:
-  ```bash
-  git remote add upstream https://github.com/torch/distro
-  git remote -v
-  ```
+   If there's not:
+   ```bash
+   git remote add upstream https://github.com/torch/distro
+   git remote -v
+   ```
   
   * Sync with the upstream: 
   ```bash
