@@ -29,8 +29,8 @@ install_cuda(){
     sudo apt-get clean
 
     # update kernel
-    echo "updating Linux kernel"
-    sudo apt-get install -y linux-image-extra-`uname -r` linux-headers-`uname -r` linux-image-`uname -r`
+    # echo "updating Linux kernel"
+    # sudo apt-get install -y linux-image-extra-`uname -r` linux-headers-`uname -r` linux-image-`uname -r`
 
     # reinstall cuda and clean
     echo "Installing cuda drivers"
@@ -215,10 +215,10 @@ elif [[ "$(uname)" == 'Linux' ]]; then
         if [[ $ubuntu_major_version -lt '15' ]]; then
             sudo apt-get install libqt4-core libqt4-gui
         fi
-	
-	# Install cuda lib
-	install_cuda
-	
+    
+    # Install cuda lib
+    install_cuda
+    
     elif [[ $distribution == 'elementary' ]]; then
         declare -a target_pkgs
         target_pkgs=( build-essential gcc g++ curl \
@@ -283,11 +283,11 @@ elif [[ "$(uname)" == 'Linux' ]]; then
             #using dnf - since yum has been deprecated
             #sox-plugins-freeworld is not yet available in repos for F22
             sudo dnf install -y cmake curl readline-devel ncurses-devel \
-            			gcc-c++ gcc-gfortran git gnuplot unzip \
-            			nodejs npm libjpeg-turbo-devel libpng-devel \
-            			ImageMagick GraphicsMagick-devel fftw-devel \
-            			sox-devel sox qt-devel qtwebkit-devel \
-            			python-ipython czmq czmq-devel
+                        gcc-c++ gcc-gfortran git gnuplot unzip \
+                        nodejs npm libjpeg-turbo-devel libpng-devel \
+                        ImageMagick GraphicsMagick-devel fftw-devel \
+                        sox-devel sox qt-devel qtwebkit-devel \
+                        python-ipython czmq czmq-devel
             install_openblas || true
         else
             echo "Only Fedora 20 or Fedora 22 is supported for now, aborting."
