@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 ######################################################################
 # This script installs required dependencies for Torch7
@@ -48,6 +49,7 @@ install_cuda(){
 install_openblas() {
     # Get and build OpenBlas (Torch is much better with a decent Blas)
     cd /tmp/
+    rm -rf OpenBLAS
     git clone https://github.com/xianyi/OpenBLAS.git
     cd OpenBLAS
     if [ $(getconf _NPROCESSORS_ONLN) == 1 ]; then
@@ -55,13 +57,13 @@ install_openblas() {
     else
         make NO_AFFINITY=1 USE_OPENMP=1
     fi
-    RET=$?; 
+    RET=$?;
     if [ $RET -ne 0 ]; then
         echo "Error. OpenBLAS could not be compiled";
         exit $RET;
     fi
     sudo make install
-    RET=$?; 
+    RET=$?;
     if [ $RET -ne 0 ]; then
         echo "Error. OpenBLAS could not be installed";
         exit $RET;
@@ -114,7 +116,6 @@ if [[ `uname` == 'Darwin' ]]; then
     brew install git readline cmake wget qt
     brew install libjpeg imagemagick zeromq graphicsmagick openssl
     brew link readline --force
-    brew install caskroom/cask/brew-cask
     brew cask install xquartz
     brew remove gnuplot
     brew install gnuplot --with-wxmac --with-cairo --with-pdflib-lite --with-x11 --without-lua
@@ -130,7 +131,7 @@ elif [[ "$(uname)" == 'Linux' ]]; then
     elif [[ -r /etc/redhat-release ]]; then
         DIST_VERS=( $( cat /etc/redhat-release ) ) # make the file an array
         DISTRO="${DIST_VERS[0],,}" # get the first element and get lcase
-        VERS="${DIST_VERS[2]}" # get the third element (version)
+        VERSION="${DIST_VERS[2]}" # get the third element (version)
     elif [[ -r /etc/lsb-release ]]; then
         DIST_VERS="$( ( . /etc/lsb-release &>/dev/null
                         echo "${DISTRIB_ID,,} $DISTRIB_RELEASE") )"
@@ -162,6 +163,10 @@ elif [[ "$(uname)" == 'Linux' ]]; then
     elif [[ "$DISTRO" = "centos" ]]; then
         distribution="centos"
         centos_major_version="$VERSION"
+    # Detect AWS
+    elif [[ "$DISTRO" = "amzn" ]]; then
+        distribution="amzn"
+        amzn_major_version="$VERSION"
     else
         echo '==> Only Ubuntu, elementary OS, Fedora, Archlinux and CentOS distributions are supported.'
         exit 1
@@ -169,26 +174,29 @@ elif [[ "$(uname)" == 'Linux' ]]; then
 
     # Install dependencies for Torch:
     if [[ $distribution == 'ubuntu' ]]; then
-        declare -a target_pkgs
-        target_pkgs=( build-essential gcc g++ curl \
-                      cmake libreadline-dev git-core libqt4-core libqt4-gui \
-                      libqt4-dev libjpeg-dev libpng-dev ncurses-dev \
-                      imagemagick libzmq3-dev gfortran unzip gnuplot \
-                      gnuplot-x11 ipython )
         sudo apt-get update
         # python-software-properties is required for apt-add-repository
-        sudo apt-get install -y python-software-properties 
-        if [[ $ubuntu_major_version == '14' ]]; then
-            echo '==> Found Ubuntu version 14.xx, installing dependencies'
+        sudo apt-get install -y python-software-properties
+        echo "==> Found Ubuntu version ${ubuntu_major_version}.xx"
+        if [[ $ubuntu_major_version -lt '12' ]]; then
+            echo '==> Ubuntu version not supported.'
+            exit 1
+        elif [[ $ubuntu_major_version -lt '14' ]]; then
+            sudo -E add-apt-repository -y ppa:chris-lea/zeromq
+            sudo -E add-apt-repository -y ppa:chris-lea/node.js
+        elif [[ $ubuntu_major_version -lt '15' ]]; then
+            sudo -E add-apt-repository -y ppa:jtaylor/ipython
+        else
             sudo apt-get install -y software-properties-common \
                 libgraphicsmagick1-dev nodejs npm libfftw3-dev sox libsox-dev \
                 libsox-fmt-all
-
-            sudo add-apt-repository -y ppa:jtaylor/ipython
-        else
-            sudo add-apt-repository -y ppa:chris-lea/zeromq
-            sudo add-apt-repository -y ppa:chris-lea/node.js
         fi
+
+        sudo apt-get update
+        sudo apt-get install -y build-essential gcc g++ curl \
+            cmake libreadline-dev git-core libqt4-dev libjpeg-dev \
+            libpng-dev ncurses-dev imagemagick libzmq3-dev gfortran \
+            unzip gnuplot gnuplot-x11 ipython
 
         gcc_major_version=$(gcc --version | grep ^gcc | awk '{print $4}' | \
                             cut -c 1)
@@ -197,12 +205,20 @@ elif [[ "$(uname)" == 'Linux' ]]; then
             sudo apt-get install -y gcc-4.9 libgfortran-4.9-dev g++-4.9
         fi
 
-        sudo apt-get update
-        sudo apt-get install -y "${target_pkgs[@]}"
+        if [[ $ubuntu_major_version -lt '14' ]]; then
+            # Install from source after installing git and build-essential
+            install_openblas || true
+        else
+            sudo apt-get install -y libopenblas-dev liblapack-dev
+        fi
 
-        install_openblas
-        install_cuda
-
+        if [[ $ubuntu_major_version -lt '15' ]]; then
+            sudo apt-get install libqt4-core libqt4-gui
+        fi
+	
+	# Install cuda lib
+	install_cuda
+	
     elif [[ $distribution == 'elementary' ]]; then
         declare -a target_pkgs
         target_pkgs=( build-essential gcc g++ curl \
@@ -219,15 +235,15 @@ elif [[ "$(uname)" == 'Linux' ]]; then
                 libgraphicsmagick1-dev nodejs npm libfftw3-dev sox libsox-dev \
                 libsox-fmt-all
 
-            sudo add-apt-repository -y ppa:jtaylor/ipython
+            sudo -E add-apt-repository -y ppa:jtaylor/ipython
         else
-            sudo add-apt-repository -y ppa:chris-lea/zeromq
-            sudo add-apt-repository -y ppa:chris-lea/node.js
+            sudo -E add-apt-repository -y ppa:chris-lea/zeromq
+            sudo -E add-apt-repository -y ppa:chris-lea/node.js
         fi
         sudo apt-get update
         sudo apt-get install -y "${target_pkgs[@]}"
 
-        install_openblas
+        install_openblas || true
 
     elif [[ $distribution == 'archlinux' ]]; then
         echo "Archlinux installation"
@@ -248,7 +264,7 @@ elif [[ "$(uname)" == 'Linux' ]]; then
         # if openblas is not installed yet
         pacman -Qs openblas &> /dev/null
         if [[ $? -ne 0 ]]; then
-            install_openblas_AUR
+            install_openblas_AUR || true
         else
             echo "OpenBLAS is already installed"
         fi
@@ -262,8 +278,8 @@ elif [[ "$(uname)" == 'Linux' ]]; then
                                 sox-devel sox zeromq3-devel \
                                 qt-devel qtwebkit-devel sox-plugins-freeworld \
                                 ipython
-            install_openblas
-        elif [[ $fedora_major_version == '22' ]]; then
+            install_openblas || true
+        elif [[ $fedora_major_version == '22' ||  $fedora_major_version == '23'  ]]; then
             #using dnf - since yum has been deprecated
             #sox-plugins-freeworld is not yet available in repos for F22
             sudo dnf install -y cmake curl readline-devel ncurses-devel \
@@ -272,7 +288,7 @@ elif [[ "$(uname)" == 'Linux' ]]; then
             			ImageMagick GraphicsMagick-devel fftw-devel \
             			sox-devel sox qt-devel qtwebkit-devel \
             			python-ipython czmq czmq-devel
-            install_openblas
+            install_openblas || true
         else
             echo "Only Fedora 20 or Fedora 22 is supported for now, aborting."
             exit 1
@@ -287,12 +303,33 @@ elif [[ "$(uname)" == 'Linux' ]]; then
                                 sox-devel sox zeromq3-devel \
                                 qt-devel qtwebkit-devel sox-plugins-freeworld
             sudo yum install -y python-ipython
-            install_openblas
+            install_openblas || true
         else
             echo "Only CentOS 7 is supported for now, aborting."
             exit 1
         fi
+    elif [[ $distribution == 'amzn' ]]; then
+        sudo yum install -y cmake curl readline-devel ncurses-devel \
+                            gcc-c++ gcc-gfortran git gnuplot unzip \
+                            nodejs npm libjpeg-turbo-devel libpng-devel \
+                            ImageMagick GraphicsMagick-devel fftw-devel \
+                            libgfortran python27-pip git openssl-devel
+
+        #
+        # These libraries are missing from amzn linux
+        # sox-devel sox sox-plugins-freeworld qt-devel qtwebkit-devel
+        #
+
+        sudo yum --enablerepo=epel install -y zeromq3-devel
+        sudo pip install ipython
+
+        install_openblas || true
     fi
+
+elif [[ "$(uname)" == 'FreeBSD' ]]; then
+    pkg install ImageMagick cmake curl fftw3 git gnuplot libjpeg-turbo \
+        libzmq3 ncurses node npm openblas openssl png py27-ipython \
+        py27-pip qt4-corelib qt4-gui readline unzip
 
 else
     # Unsupported
