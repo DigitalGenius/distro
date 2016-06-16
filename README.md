@@ -3,24 +3,14 @@
 Self-contained Torch installation
 ============
 
-Clone this repo...
+Install dependencies. Uses apt-get on Ubuntu, which might require sudo. Uses brew on OSX.
 ```sh
-<<<<<<< HEAD
+curl -s https://raw.githubusercontent.com/DigitalGenius/distro/master/install-deps | bash
+```
+Clone this repo and install torch distribution, together with a lot of nice goodies.
+```sh
 git clone https://github.com/DigitalGenius/distro.git ~/torch --recursive
-=======
-curl -s https://raw.githubusercontent.com/torch/distro/master/install-deps | bash
->>>>>>> upstream/master
-```
-
-Install all the dependencies, executing the 'install-deps.sh' file.
-Uses `apt-get` on Ubuntu, which might require `sudo`. Uses `brew` on OSX.
-```sh
-cd ~/torch; ./install-deps.sh
-```
-
-Install torch distribution, together with a lot of nice goodies.
-```sh
-./install.sh
+cd ~/torch; ./install.sh
 ```
 
 By default Torch will install LuaJIT 2.1. If you want other options, you can use the command:
