@@ -19,5 +19,5 @@ if [[ `uname` == 'Linux' ]]; then
     cuda-curand-dev-${CUDA_VERSION} \
     cuda-cusparse-${CUDA_VERSION} \
     cuda-cusparse-dev-${CUDA_VERSION}
-  ln -s /usr/local/cuda-6.5 /usr/local/cuda
+  ln -s /usr/local/cuda-${CUDA_VERSION} /usr/local/cuda
 fi
